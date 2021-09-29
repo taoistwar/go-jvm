@@ -11,12 +11,13 @@ func PrintUsage() {
 }
 
 type Cmd struct {
-	helpFlag    bool
-	versionFlag bool
-	cpOption    string
-	class       string
-	args        []string
-	xJreOption  string
+	helpFlag              bool
+	versionFlag           bool
+	cpOption              string
+	class                 string
+	args                  []string
+	xJreOption            string
+	xPreviewFeatureOption bool
 }
 
 func ParseCmd() *Cmd {
@@ -28,6 +29,7 @@ func ParseCmd() *Cmd {
 	flag.StringVar(&cmd.cpOption, "classpath", "", "classpath")
 	flag.StringVar(&cmd.cpOption, "cp", "", "classpath")
 	flag.StringVar(&cmd.xJreOption, "XJre", "", "path to jre")
+	flag.BoolVar(&cmd.xPreviewFeatureOption, "XPreviewFeature", false, "enable preview feature")
 	flag.Parse()
 	args := flag.Args()
 	if len(args) > 0 {
@@ -58,4 +60,8 @@ func (cmd *Cmd) Args() []string {
 }
 func (cmd *Cmd) XJreOption() string {
 	return cmd.xJreOption
+}
+
+func (cmd *Cmd) XPreviewFeatureOption() bool {
+	return cmd.xPreviewFeatureOption
 }

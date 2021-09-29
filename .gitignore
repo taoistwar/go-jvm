@@ -1,2 +1,4 @@
 *.class
 go-jvm
+.DS_Store
+.vscode
