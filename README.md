@@ -26,11 +26,11 @@ javac com/github/taoistwar/java/ClassFileTest.java
 
 ```shell
 cd demo
-javap -v com.github.taoistwar.java.ClassFileTest
+javap -l -c -v com.github.taoistwar.java.ClassFileTest
 ```
 
-结果：
+### local vars
 
-```class
-
+```shell
+javap -l -c -v com.github.taoistwar.java.LocalVarDemo
 ```

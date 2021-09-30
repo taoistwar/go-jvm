@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 )
 
 func PrintUsage() {
@@ -18,6 +20,7 @@ type Cmd struct {
 	args                  []string
 	xJreOption            string
 	xPreviewFeatureOption bool
+	xss                   string
 }
 
 func ParseCmd() *Cmd {
@@ -30,6 +33,7 @@ func ParseCmd() *Cmd {
 	flag.StringVar(&cmd.cpOption, "cp", "", "classpath")
 	flag.StringVar(&cmd.xJreOption, "XJre", "", "path to jre")
 	flag.BoolVar(&cmd.xPreviewFeatureOption, "XPreviewFeature", false, "enable preview feature")
+	flag.StringVar(&cmd.xss, "Xss", "256k", "set stack size")
 	flag.Parse()
 	args := flag.Args()
 	if len(args) > 0 {
@@ -64,4 +68,26 @@ func (cmd *Cmd) XJreOption() string {
 
 func (cmd *Cmd) XPreviewFeatureOption() bool {
 	return cmd.xPreviewFeatureOption
+}
+
+func (cmd *Cmd) Xss() uint {
+	if strings.HasSuffix(cmd.xss, "k") || strings.HasSuffix(cmd.xss, "K") || strings.HasSuffix(cmd.xss, "kb") ||
+		strings.HasSuffix(cmd.xss, "KB") {
+		tmp := cmd.xss[:len(cmd.xss)-1]
+		value, err := strconv.Atoi(tmp)
+		if err != nil {
+			panic(fmt.Sprintf("Xss config err, %s", cmd.xss))
+		}
+		return uint(value * 1024)
+	}
+	if strings.HasSuffix(cmd.xss, "m") || strings.HasSuffix(cmd.xss, "M") || strings.HasSuffix(cmd.xss, "mb") ||
+		strings.HasSuffix(cmd.xss, "MB") {
+		tmp := cmd.xss[:len(cmd.xss)-1]
+		value, err := strconv.Atoi(tmp)
+		if err != nil {
+			panic(fmt.Sprintf("Xss config err, %s", cmd.xss))
+		}
+		return uint(value * 1024 * 1024)
+	}
+	return 256 * 1024
 }
