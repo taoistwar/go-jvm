@@ -57,3 +57,23 @@ func (its *MemberInfo) Name() string {
 func (its *MemberInfo) Descriptor() string {
 	return its.cp.getUtf8(its.descriptorIndex)
 }
+
+func (its *MemberInfo) CodeAttribute() *CodeAttribute {
+	for _, attrInfo := range its.attributes {
+		switch (*attrInfo).(type) {
+		case *CodeAttribute:
+			return (*attrInfo).(*CodeAttribute)
+		}
+	}
+	return nil
+}
+
+func (mi *MemberInfo) ConstantValueAttribute() *ConstantValueAttribute {
+	for _, attrInfo := range mi.attributes {
+		switch (*attrInfo).(type) {
+		case *ConstantValueAttribute:
+			return (*attrInfo).(*ConstantValueAttribute)
+		}
+	}
+	return nil
+}

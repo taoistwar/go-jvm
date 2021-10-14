@@ -4,30 +4,32 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/taoistwar/go-jvm/classfile"
 	"github.com/taoistwar/go-jvm/classpath"
 	"github.com/taoistwar/go-jvm/cli"
-	"github.com/taoistwar/go-jvm/rtda"
+	"github.com/taoistwar/go-jvm/interpreter"
+	"github.com/taoistwar/go-jvm/rtda/java"
 )
 
 const version = "0.0.1"
 
-func startJVM(cmd *cli.Cmd) {
-	cp := classpath.Parse(cmd.XJreOption(), cmd.CpOption())
-	fmt.Printf("classpath:%s class:%s args:%v\n", cp.String(), cmd.Class(), cmd.Args())
+func startJvm(cmd *cli.Cmd) {
+	class := "com.github.taoistwar.java.MyObject"
+	cpOption := "demo"
+	// cp := classpath.ParseClasspath(cmd.XJreOption(), cmd.CpOption())
+	cp := classpath.ParseClasspath(cmd.XJreOption(), cpOption)
+	fmt.Printf("classpath:%s class:%s args:%v\n", cp.String(), class, cmd.Args())
+	classLoader := java.NewJavaClassLoader(cp)
+	className := strings.Replace(class, ".", "/", -1)
 
-	className := strings.Replace(cmd.Class(), ".", "/", -1)
-	classData, _, err := cp.ReadClass(className)
-	if err != nil {
-		fmt.Printf("Could not found or load main class %s\n", cmd.Class())
-		return
+	mainClass := classLoader.LoadClass(className)
+	if mainClass == nil {
+		panic(fmt.Sprintf("Could not found or load main class %s\n", className))
 	}
-	fmt.Printf("class data:%v\n", classData)
-	cf, err := classfile.Parse(classData)
-	if err != nil {
-		fmt.Printf("Could not parse class file")
+	mainMethod := mainClass.GetMainMethod()
+	if mainMethod == nil {
+		panic(fmt.Sprintf("Could not found main method in class %s\n", className))
 	}
-	fmt.Printf("%v", cf)
+	interpreter.Interpret(mainMethod)
 }
 
 func main() {
@@ -38,6 +40,6 @@ func main() {
 	} else if cmd.HelpFlag() && cmd.Class() == "" {
 		cli.PrintUsage()
 	} else {
-		rtda.StartJvmByRtda(cmd)
+		startJvm(cmd)
 	}
 }

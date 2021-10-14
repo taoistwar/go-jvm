@@ -20,7 +20,7 @@ ClassFile {
     attribute_info attributes[attributes_count];
 }
 */
-type Classfile struct {
+type ClassFile struct {
 	magic         uint32
 	minor_version uint16
 	major_version uint16
@@ -34,7 +34,7 @@ type Classfile struct {
 	attributes    []*AttributeInfo
 }
 
-func (cf *Classfile) read(reader *ClassReader) {
+func (cf *ClassFile) read(reader *ClassReader) {
 	cf.readAndCheckMagic(reader)
 	cf.readAndCheckVersion(reader)
 	cf.constant_pool = readConstantPool(reader)
@@ -47,14 +47,14 @@ func (cf *Classfile) read(reader *ClassReader) {
 	cf.attributes = readAttributes(reader, cf.constant_pool)
 }
 
-func (cf *Classfile) readAndCheckMagic(reader *ClassReader) {
+func (cf *ClassFile) readAndCheckMagic(reader *ClassReader) {
 	magic := reader.ReadUint32()
 	if magic != 0xCAFEBABE {
 		panic("java.lang.ClassFormatError: magic!")
 	}
 }
 
-func (cf *Classfile) readAndCheckVersion(reader *ClassReader) {
+func (cf *ClassFile) readAndCheckVersion(reader *ClassReader) {
 	// For a class file whose major_version is 56 or above, the minor_version must be 0 or 65535.
 	// For a class file whose major_version is between 45 and 55 inclusive, the minor_version may be any value.
 	cf.minor_version = reader.ReadUint16()
@@ -72,40 +72,40 @@ func (cf *Classfile) readAndCheckVersion(reader *ClassReader) {
 	}
 	panic("java.lang.UnsupportedClassVersionError!")
 }
-func (cf *Classfile) Magic() uint32 {
+func (cf *ClassFile) Magic() uint32 {
 	return cf.magic
 }
-func (cf *Classfile) MinorVersion() uint16 {
+func (cf *ClassFile) MinorVersion() uint16 {
 	return cf.minor_version
 }
-func (cf *Classfile) MajorVersion() uint16 {
+func (cf *ClassFile) MajorVersion() uint16 {
 	return cf.major_version
 }
-func (cf *Classfile) ConstantPool() ConstantPool {
+func (cf *ClassFile) ConstantPool() ConstantPool {
 	return cf.constant_pool
 }
-func (cf *Classfile) AccessFlags() uint16 {
+func (cf *ClassFile) AccessFlags() uint16 {
 	return cf.access_flag
 }
-func (cf *Classfile) Fields() []*MemberInfo {
+func (cf *ClassFile) Fields() []*MemberInfo {
 	return cf.fields
 }
-func (cf *Classfile) Methods() []*MemberInfo {
+func (cf *ClassFile) Methods() []*MemberInfo {
 	return cf.methods
 }
 
-func (cf *Classfile) ClassName() string {
+func (cf *ClassFile) ClassName() string {
 	return cf.constant_pool.getClassName(cf.this_class)
 }
 
-func (cf *Classfile) SuperClassName() string {
+func (cf *ClassFile) SuperClassName() string {
 	if cf.super_class > 0 {
 		return cf.constant_pool.getClassName(cf.super_class)
 	}
 	return ""
 }
 
-func (cf *Classfile) InterfaceNames() []string {
+func (cf *ClassFile) InterfaceNames() []string {
 	interfaceNames := make([]string, len(cf.interfaces))
 	for i, cpIndex := range cf.interfaces {
 		interfaceNames[i] = cf.constant_pool.getClassName(cpIndex)

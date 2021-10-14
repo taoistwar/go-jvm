@@ -26,9 +26,9 @@ func (compositeEntry *CompositeEntry) String() string {
 func (compositeEntry *CompositeEntry) readClass(className string) ([]byte, Entry, error) {
 	for _, entry := range *compositeEntry {
 		data, from, err := entry.readClass(className)
-		if err != nil {
+		if err == nil && data != nil {
 			return data, from, nil
 		}
 	}
-	return nil, nil, errors.New("class not found: " + className)
+	return nil, compositeEntry, errors.New("class not found: " + className)
 }

@@ -3,6 +3,7 @@ package classpath
 import (
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 )
 
@@ -26,6 +27,14 @@ func (directoryEntry *DirectoryEntry) String() string {
 
 func (directoryEntry *DirectoryEntry) readClass(className string) ([]byte, Entry, error) {
 	dstFile := filepath.Join(directoryEntry.absDir, className)
+	_, err := os.Stat(dstFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, directoryEntry, nil
+		}
+		return nil, directoryEntry, err
+	}
+
 	data, err := ioutil.ReadFile(dstFile)
 	log.Printf("load class:%s from file:%s", className, dstFile)
 	return data, directoryEntry, err

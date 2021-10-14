@@ -2,7 +2,6 @@ package classpath
 
 import (
 	"archive/zip"
-	"errors"
 	"io/ioutil"
 	"log"
 	"path/filepath"
@@ -47,5 +46,5 @@ func (zipEntry *ZipEntry) readClass(className string) ([]byte, Entry, error) {
 			return data, zipEntry, nil
 		}
 	}
-	return nil, zipEntry, errors.New("class not found:" + className)
+	return nil, zipEntry, nil
 }

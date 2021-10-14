@@ -11,7 +11,7 @@ type Classpath struct {
 	userClasspath Entry
 }
 
-func Parse(jreOption string, cpOption string) *Classpath {
+func ParseClasspath(jreOption string, cpOption string) *Classpath {
 	cp := &Classpath{}
 	cp.parseBootAndExtClasspath(jreOption)
 	cp.parseUserClasspath(cpOption)
@@ -40,12 +40,13 @@ func getJreDir(jreOption string) string {
 }
 func (classpath *Classpath) parseBootAndExtClasspath(jreOption string) {
 	jreDir := getJreDir(jreOption)
+	jreDir = "/Users/taoistwar/Library/Java/JavaVirtualMachines/azul-1.8.0_292/Contents/Home" // for jdk 8
 	// jre/lib/*
-	jreLibPath := filepath.Join(jreDir, "lib", "*")
+	jreLibPath := filepath.Join(jreDir, "jre", "lib", "*")
 	classpath.bootClasspath = newWillcardEntry(jreLibPath)
 
 	// jre/lib/ext/*
-	jreExtPath := filepath.Join(jreDir, "lib", "ext", "*")
+	jreExtPath := filepath.Join(jreDir, "jre", "lib", "ext", "*")
 	classpath.extClasspath = newWillcardEntry(jreExtPath)
 }
 func (classpath *Classpath) parseUserClasspath(cpOption string) {
@@ -55,15 +56,15 @@ func (classpath *Classpath) parseUserClasspath(cpOption string) {
 	classpath.userClasspath = newEntry(cpOption)
 }
 
-func (classpath *Classpath) ReadClass(className string) ([]byte, Entry, error) {
+func (its *Classpath) ReadClass(className string) ([]byte, Entry, error) {
 	className = className + ".class"
-	if data, entry, err := classpath.bootClasspath.readClass(className); err == nil {
+	if data, entry, err := its.bootClasspath.readClass(className); err == nil {
 		return data, entry, nil
 	}
-	if data, entry, err := classpath.extClasspath.readClass(className); err == nil {
+	if data, entry, err := its.extClasspath.readClass(className); err == nil {
 		return data, entry, nil
 	}
-	return classpath.userClasspath.readClass(className)
+	return its.userClasspath.readClass(className)
 }
 
 func (classpath *Classpath) String() string {

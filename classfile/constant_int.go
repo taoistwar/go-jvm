@@ -7,13 +7,15 @@ CONSTANT_Integer_info {
 }
 */
 type ConstantIntegerInfo struct {
-	val int32
+	value int32
 }
 
 func (its *ConstantIntegerInfo) readInfo(reader *ClassReader) {
+	// The bytes item of the CONSTANT_Integer_info structure represents the value of the int constant.
+	// The bytes of the value are stored in big-endian (high byte first) order.
 	bytes := reader.ReadUint32()
-	its.val = int32(bytes)
+	its.value = int32(bytes)
 }
 func (its *ConstantIntegerInfo) Value() int32 {
-	return its.val
+	return its.value
 }

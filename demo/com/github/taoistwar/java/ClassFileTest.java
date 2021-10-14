@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class ClassFileTest implements Serializable {
     public static final boolean FLAG = true;
-    public static final byte BYTE = 123;
+    public static final byte BYTE = 1+2+3;
     public static final char X = 'X';
     public static final short SHORT = 12345;
     public static final int INT = 123456789;
