@@ -6,11 +6,9 @@ import (
 )
 
 type DStore0 struct {
-	index int8
 }
 
 func (its *DStore0) FetchOperand(reader *base.BytecodeReader) {
-	its.index = reader.ReadInt8()
 }
 
 func (its *DStore0) Execute(frame *rtdaBase.JavaFrame) {

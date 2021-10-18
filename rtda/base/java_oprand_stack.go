@@ -22,38 +22,38 @@ func newJavaOperandStack(maxStack uint) *JavaOperandStack {
 }
 
 func (its *JavaOperandStack) PushInt(value int32) {
-	its.slots[its.size].Data = value
+	its.slots[its.size].data = value
 	its.size++
 }
 
 func (its *JavaOperandStack) PopInt() int32 {
 	its.size--
-	return its.slots[its.size].Data
+	return its.slots[its.size].data
 }
 
 func (jos *JavaOperandStack) PushFloat(val float32) {
 	bits := math.Float32bits(val)
-	jos.slots[jos.size].Data = int32(bits)
+	jos.slots[jos.size].data = int32(bits)
 	jos.size++
 }
 
 func (jos *JavaOperandStack) PopFloat() float32 {
 	jos.size--
-	bits := uint32(jos.slots[jos.size].Data)
+	bits := uint32(jos.slots[jos.size].data)
 	return math.Float32frombits(bits)
 }
 
 // long consumes two slots
 func (jos *JavaOperandStack) PushLong(val int64) {
-	jos.slots[jos.size].Data = int32(val)
-	jos.slots[jos.size+1].Data = int32(val >> 32)
+	jos.slots[jos.size].data = int32(val)
+	jos.slots[jos.size+1].data = int32(val >> 32)
 	jos.size += 2
 }
 
 func (jos *JavaOperandStack) PopLong() int64 {
 	jos.size -= 2
-	low := uint32(jos.slots[jos.size].Data)
-	high := uint32(jos.slots[jos.size+1].Data)
+	low := uint32(jos.slots[jos.size].data)
+	high := uint32(jos.slots[jos.size+1].data)
 	return int64(high)<<32 | int64(low)
 }
 
@@ -90,5 +90,5 @@ func (jos *JavaOperandStack) PopSlot() *JavaLocalVarSlot {
 }
 
 func (its *JavaOperandStack) GetRefFromTop(n uint) *java.JavaObject {
-	return its.slots[its.size-1-n].ref
+	return its.slots[its.size-1-n].GetRef()
 }

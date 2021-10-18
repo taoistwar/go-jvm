@@ -31,6 +31,10 @@ func (thread *JavaThread) PopFrame() *JavaFrame {
 	return thread.stack.pop()
 }
 
+func (thread *JavaThread) TopFrame() *JavaFrame {
+	return thread.stack.top
+}
+
 func (thread *JavaThread) CurrentFrame() *JavaFrame {
 	return thread.stack.current()
 }

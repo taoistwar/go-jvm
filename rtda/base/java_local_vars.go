@@ -16,35 +16,30 @@ func newJavaLocalVars(maxLocalVars uint) JavaLocalVars {
 	return nil
 }
 
-type JavaLocalVarSlot struct {
-	Data int32
-	ref  *java.JavaObject
-}
-
 func (its JavaLocalVars) SetInt(index uint, value int32) {
-	(its)[index].Data = value
+	(its)[index].data = value
 }
 func (its JavaLocalVars) GetInt(index uint) int32 {
-	return (its)[index].Data
+	return (its)[index].data
 }
 
 // long consumes two slots
 func (its JavaLocalVars) SetLong(index uint, val int64) {
-	its[index].Data = int32(val)
-	its[index+1].Data = int32(val >> 32)
+	its[index].data = int32(val)
+	its[index+1].data = int32(val >> 32)
 }
 func (its JavaLocalVars) GetLong(index uint) int64 {
-	low := uint32(its[index].Data)
-	high := uint32(its[index+1].Data)
+	low := uint32(its[index].data)
+	high := uint32(its[index+1].data)
 	return int64(high)<<32 | int64(low)
 }
 
 func (its JavaLocalVars) SetFloat(index uint, value float32) {
 	bits := math.Float32bits(value)
-	(its)[index+1].Data = int32(bits)
+	(its)[index+1].SetData(int32(bits))
 }
 func (its JavaLocalVars) GetFloat(index uint) float32 {
-	bits := uint32((its)[index+1].Data)
+	bits := uint32((its)[index+1].data)
 	return math.Float32frombits(bits)
 }
 
@@ -62,5 +57,5 @@ func (its JavaLocalVars) SetRef(index uint, ref *java.JavaObject) {
 	(its)[index].ref = ref
 }
 func (its JavaLocalVars) GetRef(index uint) *java.JavaObject {
-	return (its)[index].ref
+	return (its)[index].GetRef()
 }

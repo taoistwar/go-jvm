@@ -12,7 +12,7 @@ type InvokeSpecial struct {
 }
 
 func (its *InvokeSpecial) FetchOperand(reader *base.BytecodeReader) {
-	its.Index = uint(reader.ReadInt16())
+	its.Index = uint(reader.ReadUint16())
 }
 
 func (its *InvokeSpecial) Execute(frame *rtdaBase.JavaFrame) {

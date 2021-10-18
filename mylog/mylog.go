@@ -21,5 +21,5 @@ func init() {
 
 func Printf(format string, a ...interface{}) {
 	msg := fmt.Sprintf(format, a...)
-	fmt.Println("\t" + msg + "\n")
+	fmt.Println("\t" + msg)
 }

@@ -2,6 +2,7 @@ package references
 
 import (
 	"github.com/taoistwar/go-jvm/instructions/base"
+	"github.com/taoistwar/go-jvm/mylog"
 	rtdaBase "github.com/taoistwar/go-jvm/rtda/base"
 	"github.com/taoistwar/go-jvm/rtda/java"
 )
@@ -16,7 +17,6 @@ func (its *CheckCast) FetchOperand(reader *base.BytecodeReader) {
 
 func (its *CheckCast) Execute(frame *rtdaBase.JavaFrame) {
 	stack := frame.OperandStack()
-	// TODO only return the top
 	ref := stack.PopRef()
 	stack.PushRef(ref)
 	if ref == nil {
@@ -26,6 +26,7 @@ func (its *CheckCast) Execute(frame *rtdaBase.JavaFrame) {
 	cp := frame.Method().Class().ConstantPool()
 	classRef := cp.GetConstant(its.Index).(*java.ClassRef)
 	class := classRef.ResolvedClass()
+	mylog.Printf("Index: %v, Object: %v IsInstanceOf Class: %v", its.Index, ref.Class().ThisClassName(), class.ThisClassName())
 	if !ref.IsInstanceOf(class) {
 		panic("java.lang.ClassCastException")
 	}

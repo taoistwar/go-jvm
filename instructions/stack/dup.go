@@ -23,10 +23,10 @@ func (its *Dup) Execute(frame *rtdaBase.JavaFrame) {
 	slot := stack.PopSlot()
 	stack.PushSlot(slot)
 	stack.PushSlot(slot)
-	msg, err := json.Marshal(slot)
+	msg, err := json.Marshal(*slot)
 	if err != nil {
 		mylog.Printf("Slot: %v", *slot)
 	} else {
-		mylog.Printf("Slot: %v", msg)
+		mylog.Printf("Slot: %v", string(msg))
 	}
 }

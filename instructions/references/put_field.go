@@ -42,7 +42,7 @@ func (its *PutField) Execute(frame *rtdaBase.JavaFrame) {
 		if ref == nil {
 			panic("java.lang.NullPointerException")
 		}
-		mylog.Printf("Index:%v, Field:%v %v, Slot:%v, Value:%v", its.Index, fieldRef.Name(), fieldRef.Descriptor(), val, ref)
+		mylog.Printf("Index:%v, Field:%v %v, Value:%v, Object:%v", its.Index, fieldRef.Name(), fieldRef.Descriptor(), val, ref)
 		ref.Fields().SetInt(slotId, val)
 	case 'F':
 		val := stack.PopFloat()
@@ -50,7 +50,7 @@ func (its *PutField) Execute(frame *rtdaBase.JavaFrame) {
 		if ref == nil {
 			panic("java.lang.NullPointerException")
 		}
-		mylog.Printf("Index:%v, Field:%v %v, Slot:%v, Value:%v", its.Index, fieldRef.Name(), fieldRef.Descriptor(), val, ref)
+		mylog.Printf("Index:%v, Field:%v %v, Value:%v, Object:%v", its.Index, fieldRef.Name(), fieldRef.Descriptor(), val, ref)
 		ref.Fields().SetFloat(slotId, val)
 	case 'J':
 		val := stack.PopLong()
@@ -58,7 +58,7 @@ func (its *PutField) Execute(frame *rtdaBase.JavaFrame) {
 		if ref == nil {
 			panic("java.lang.NullPointerException")
 		}
-		mylog.Printf("Index:%v, Field:%v %v, Slot:%v, Value:%v", its.Index, fieldRef.Name(), fieldRef.Descriptor(), val, ref)
+		mylog.Printf("Index:%v, Field:%v %v, Value:%v, Object:%v", its.Index, fieldRef.Name(), fieldRef.Descriptor(), val, ref)
 		ref.Fields().SetLong(slotId, val)
 	case 'D':
 		val := stack.PopDouble()
@@ -66,7 +66,7 @@ func (its *PutField) Execute(frame *rtdaBase.JavaFrame) {
 		if ref == nil {
 			panic("java.lang.NullPointerException")
 		}
-		mylog.Printf("Index:%v, Field:%v %v, Slot:%v, Value:%v", its.Index, fieldRef.Name(), fieldRef.Descriptor(), val, ref)
+		mylog.Printf("Index:%v, Field:%v %v, Value:%v, Object:%v", its.Index, fieldRef.Name(), fieldRef.Descriptor(), val, ref)
 		ref.Fields().SetDouble(slotId, val)
 	case 'L', '[':
 		val := stack.PopRef()
@@ -74,7 +74,7 @@ func (its *PutField) Execute(frame *rtdaBase.JavaFrame) {
 		if ref == nil {
 			panic("java.lang.NullPointerException")
 		}
-		mylog.Printf("Index:%v, Field:%v %v, Slot:%v, Value:%v", its.Index, fieldRef.Name(), fieldRef.Descriptor(), val, ref)
+		mylog.Printf("Index:%v, Field:%v %v, Value:%v, Object:%v", its.Index, fieldRef.Name(), fieldRef.Descriptor(), val, ref)
 		ref.Fields().SetRef(slotId, val)
 	default:
 		// todo

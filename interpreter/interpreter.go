@@ -29,11 +29,15 @@ func catchErr(frame *rtdaBase.JavaFrame) {
 }
 
 func loop(thread *rtdaBase.JavaThread, bytecode []byte) {
-	frame := thread.PopFrame()
+
 	reader := &base.BytecodeReader{}
 
 	reader.ResetCode(bytecode)
 	for {
+		frame := thread.TopFrame()
+		if frame == nil {
+			return
+		}
 		pc := frame.NextPC()
 		thread.SetPC(pc)
 
@@ -47,9 +51,9 @@ func loop(thread *rtdaBase.JavaThread, bytecode []byte) {
 		// execute
 		data, err := json.Marshal(inst)
 		if err != nil {
-			fmt.Printf("pc:%2d inst:%T %v\n", pc, inst, inst)
+			fmt.Printf("\npc: %2d inst: %T %v\n", pc, inst, inst)
 		} else {
-			fmt.Printf("pc:%2d inst:%T %v\n", pc, inst, string(data))
+			fmt.Printf("\npc: %2d inst: %T %v\n", pc, inst, string(data))
 		}
 		inst.Execute(frame)
 	}

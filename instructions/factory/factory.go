@@ -160,7 +160,7 @@ var (
 	// freturn = &FRETURN{}
 	// dreturn = &DRETURN{}
 	// areturn = &ARETURN{}
-	// _return = &RETURN{}
+	_return = &control.BytecodeReturn{}
 	// arraylength   = &ARRAY_LENGTH{}
 	// athrow        = &ATHROW{}
 	// monitorenter  = &MONITOR_ENTER{}
@@ -524,8 +524,8 @@ func NewInstruction(opcode byte) base.Instruction {
 		// 	return dreturn
 		// case 0xb0:
 		// 	return areturn
-		// case 0xb1:
-		// 	return _return
+	case 0xb1:
+		return _return
 	case 0xb2:
 		return &references.GetStatic{}
 	case 0xb3:
@@ -554,8 +554,8 @@ func NewInstruction(opcode byte) base.Instruction {
 	// 	return arraylength
 	// case 0xbf:
 	// 	return athrow
-	// case 0xc0:
-	// 	return &CHECK_CAST{}
+	case 0xc0:
+		return &references.CheckCast{}
 	case 0xc1:
 		return &references.InstanceOf{}
 	// case 0xc2:
