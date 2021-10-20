@@ -1,8 +1,6 @@
 package base
 
-import (
-	"github.com/taoistwar/go-jvm/rtda/java"
-)
+import "github.com/taoistwar/go-jvm/rtda/java"
 
 type JavaFrame struct {
 	lower        *JavaFrame
@@ -42,4 +40,8 @@ func (frame *JavaFrame) SetNextPC(nextPC int) {
 }
 func (frame *JavaFrame) Method() *java.JavaMethod {
 	return frame.method
+}
+
+func (frame *JavaFrame) RevertNextPC() {
+	frame.nextPC = frame.thread.pc
 }

@@ -59,3 +59,7 @@ func (its JavaLocalVars) SetRef(index uint, ref *java.JavaObject) {
 func (its JavaLocalVars) GetRef(index uint) *java.JavaObject {
 	return (its)[index].GetRef()
 }
+
+func (self JavaLocalVars) SetSlot(index uint, slot *JavaLocalVarSlot) {
+	self[index] = *slot
+}

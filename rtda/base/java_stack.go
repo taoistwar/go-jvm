@@ -38,3 +38,6 @@ func (stack *JavaStack) current() *JavaFrame {
 	}
 	return stack.top
 }
+func (stack *JavaStack) isEmpty() bool {
+	return stack.top == nil
+}

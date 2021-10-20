@@ -155,11 +155,11 @@ var (
 	fcmpg   = &comparisons.FCmpG{}
 	dcmpl   = &comparisons.DCmpL{}
 	dcmpg   = &comparisons.DCmpG{}
-	// ireturn = &IRETURN{}
-	// lreturn = &LRETURN{}
-	// freturn = &FRETURN{}
-	// dreturn = &DRETURN{}
-	// areturn = &ARETURN{}
+	ireturn = &control.IReturn{}
+	lreturn = &control.LReturn{}
+	freturn = &control.FReturn{}
+	dreturn = &control.DReturn{}
+	areturn = &control.AReturn{}
 	_return = &control.BytecodeReturn{}
 	// arraylength   = &ARRAY_LENGTH{}
 	// athrow        = &ATHROW{}
@@ -514,16 +514,16 @@ func NewInstruction(opcode byte) base.Instruction {
 		return &control.TableSwitch{}
 	case 0xab:
 		return &control.LookupSwitch{}
-		// case 0xac:
-		// 	return ireturn
-		// case 0xad:
-		// 	return lreturn
-		// case 0xae:
-		// 	return freturn
-		// case 0xaf:
-		// 	return dreturn
-		// case 0xb0:
-		// 	return areturn
+	case 0xac:
+		return ireturn
+	case 0xad:
+		return lreturn
+	case 0xae:
+		return freturn
+	case 0xaf:
+		return dreturn
+	case 0xb0:
+		return areturn
 	case 0xb1:
 		return _return
 	case 0xb2:
@@ -538,11 +538,11 @@ func NewInstruction(opcode byte) base.Instruction {
 		return &references.InvokeVirtual{}
 	case 0xb7:
 		return &references.InvokeSpecial{}
-	// case 0xb8:
-	// 	return &INVOKE_STATIC{}
-	// case 0xb9:
-	// 	return &INVOKE_INTERFACE{}
-	// case 0xba:
+	case 0xb8:
+		return &references.InvokeStatic{}
+	case 0xb9:
+		return &references.InvokeInterface{}
+	// case 0xba:0910
 	// 	return &INVOKE_DYNAMIC{}
 	case 0xbb:
 		return &references.BytecodeNew{}

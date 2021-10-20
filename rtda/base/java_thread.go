@@ -42,3 +42,6 @@ func (thread *JavaThread) CurrentFrame() *JavaFrame {
 func (thread *JavaThread) NewJavaFrame(javaMethod *java.JavaMethod) *JavaFrame {
 	return NewJavaFrame(thread, javaMethod)
 }
+func (thread *JavaThread) IsStackEmpty() bool {
+	return thread.stack.isEmpty()
+}

@@ -1,7 +1,6 @@
 package interpreter
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/taoistwar/go-jvm/instructions/base"
@@ -10,51 +9,62 @@ import (
 	"github.com/taoistwar/go-jvm/rtda/java"
 )
 
-func Interpret(javaMethod *java.JavaMethod) {
+func Interpret(javaMethod *java.JavaMethod, logInst bool) {
 
 	thread := rtdaBase.NewJavaThread()
 	frame := thread.NewJavaFrame(javaMethod)
 	thread.PushFrame(frame)
 
 	defer catchErr(frame)
-	loop(thread, javaMethod.Code())
+	loop(thread, logInst)
+}
+
+func logFrames(thread *rtdaBase.JavaThread) {
+	for !thread.IsStackEmpty() {
+		frame := thread.PopFrame()
+		method := frame.Method()
+		className := method.Class().ThisClassName()
+		fmt.Printf(">> pc:%4d %v.%v%v \n",
+			frame.NextPC(), className, method.Name(), method.Descriptor())
+	}
 }
 
 func catchErr(frame *rtdaBase.JavaFrame) {
 	if r := recover(); r != nil {
-		fmt.Printf("LocalVars:%v\n", frame.LocalVars())
-		fmt.Printf("OperandStack:%v\n", frame.OperandStack())
+		logFrames(frame.Thread())
 		panic(r)
 	}
 }
 
-func loop(thread *rtdaBase.JavaThread, bytecode []byte) {
+func loop(thread *rtdaBase.JavaThread, logInst bool) {
 
 	reader := &base.BytecodeReader{}
 
-	reader.ResetCode(bytecode)
 	for {
-		frame := thread.TopFrame()
-		if frame == nil {
-			return
-		}
+		frame := thread.CurrentFrame()
 		pc := frame.NextPC()
 		thread.SetPC(pc)
 
 		// decode
-		reader.ResetPC(pc)
+		reader.Reset(frame.Method().Code(), pc)
 		opcode := reader.ReadOperandCode()
 		inst := factory.NewInstruction(opcode)
 		inst.FetchOperand(reader)
 		frame.SetNextPC(reader.PC())
-
-		// execute
-		data, err := json.Marshal(inst)
-		if err != nil {
-			fmt.Printf("\npc: %2d inst: %T %v\n", pc, inst, inst)
-		} else {
-			fmt.Printf("\npc: %2d inst: %T %v\n", pc, inst, string(data))
+		if logInst {
+			logInstruction(frame, inst)
 		}
 		inst.Execute(frame)
+		if thread.IsStackEmpty() {
+			// TODO thread close
+			break
+		}
 	}
+}
+func logInstruction(frame *rtdaBase.JavaFrame, inst base.Instruction) {
+	method := frame.Method()
+	className := method.Class().ThisClassName()
+	methodName := method.Name()
+	pc := frame.Thread().PC()
+	fmt.Printf("%v.%v() #%2d %T %v\n", className, methodName, pc, inst, inst)
 }

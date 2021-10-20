@@ -15,6 +15,8 @@ func PrintUsage() {
 type Cmd struct {
 	helpFlag              bool
 	versionFlag           bool
+	verboseClassFlag      bool // 是否把类加载信息输出到控制台。
+	verboseInstFlag       bool // 是否把指令执行信息输出到控制台。
 	cpOption              string
 	class                 string
 	args                  []string
@@ -29,6 +31,9 @@ func ParseCmd() *Cmd {
 	flag.BoolVar(&cmd.helpFlag, "help", false, "print help message")
 	flag.BoolVar(&cmd.helpFlag, "?", false, "print help mesage")
 	flag.BoolVar(&cmd.versionFlag, "version", false, "print version and exit")
+	flag.BoolVar(&cmd.verboseClassFlag, "verbose", false, "enable verbose output")
+	flag.BoolVar(&cmd.verboseClassFlag, "verbose:class", false, "enable verbose output")
+	flag.BoolVar(&cmd.verboseInstFlag, "verbose:inst", false, "enable verbose output")
 	flag.StringVar(&cmd.cpOption, "classpath", "", "classpath")
 	flag.StringVar(&cmd.cpOption, "cp", "", "classpath")
 	flag.StringVar(&cmd.xJreOption, "XJre", "", "path to jre")
@@ -50,13 +55,25 @@ func (cmd *Cmd) HelpFlag() bool {
 func (cmd *Cmd) VersionFlag() bool {
 	return cmd.versionFlag
 }
-
+func (cmd *Cmd) VerboseClassFlag() bool {
+	return cmd.verboseClassFlag
+}
+func (cmd *Cmd) VerboseInstFlag() bool {
+	return cmd.verboseInstFlag
+}
 func (cmd *Cmd) CpOption() string {
 	return cmd.cpOption
 }
 
 func (cmd *Cmd) Class() string {
 	return cmd.class
+}
+
+func (cmd *Cmd) Reset(class string, classpathOption string) {
+	cmd.class = class
+	cmd.cpOption = classpathOption
+	cmd.verboseClassFlag = true
+	cmd.verboseInstFlag = true
 }
 
 func (cmd *Cmd) Args() []string {

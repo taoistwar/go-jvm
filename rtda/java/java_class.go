@@ -20,6 +20,7 @@ type JavaClass struct {
 	instanceSlotCount uint
 	staticSlotCount   uint
 	staticVars        Slots
+	initStarted       bool
 }
 
 func NewJavaClass(cf *classfile.ClassFile) *JavaClass {
@@ -86,7 +87,9 @@ func (its *JavaClass) getPackageName() string {
 func (its *JavaClass) GetMainMethod() *JavaMethod {
 	return its.getStaticMethod("main", "([Ljava/lang/String;)V")
 }
-
+func (its *JavaClass) GetClassInitMethod() *JavaMethod {
+	return its.getStaticMethod("<clinit>", "()V")
+}
 func (its *JavaClass) getStaticMethod(name, descriptor string) *JavaMethod {
 	for _, method := range its.methods {
 		if method.IsStatic() &&
@@ -101,21 +104,6 @@ func (its *JavaClass) getStaticMethod(name, descriptor string) *JavaMethod {
 
 func (its *JavaClass) NewObject() *JavaObject {
 	return newJavaObject(its)
-}
-
-// jvms8 6.5.instanceof
-// jvms8 6.5.checkcast
-func (javaClass *JavaClass) isAssignableFrom(s *JavaClass) bool {
-
-	if s == javaClass {
-		return true
-	}
-
-	if !javaClass.IsInterface() {
-		return s.isSubClassOf(javaClass)
-	} else {
-		return s.isImplements(javaClass)
-	}
 }
 
 // its extends c
@@ -148,4 +136,135 @@ func (its *JavaClass) isSubInterfaceOf(iface *JavaClass) bool {
 		}
 	}
 	return false
+}
+
+func (c *JavaClass) lookupField(name, descriptor string) *JavaField {
+	for _, field := range c.fields {
+		if field.name == name && field.descriptor == descriptor {
+			return field
+		}
+	}
+	for _, iface := range c.interfaces {
+		if field := iface.lookupField(name, descriptor); field != nil {
+			return field
+		}
+	}
+	if c.superClass != nil {
+		return c.superClass.lookupField(name, descriptor)
+	}
+	return nil
+}
+
+func (class *JavaClass) LookupMethod(name, descriptor string) *JavaMethod {
+	method := class.LookupMethodInClass(name, descriptor)
+	if method != nil {
+		return method
+	}
+	for _, iface := range class.interfaces {
+		method = iface.LookupMethodInInterface(name, descriptor)
+		if method != nil {
+			break
+		}
+	}
+	return nil
+}
+
+func (class *JavaClass) LookupMethodInClass(name, descriptor string) *JavaMethod {
+	for c := class; c != nil; c = c.superClass {
+		for _, method := range c.methods {
+			if method.name == name && method.descriptor == descriptor {
+				return method
+			}
+		}
+	}
+	return nil
+}
+
+func (iface *JavaClass) LookupMethodInInterface(name, descriptor string) *JavaMethod {
+	for _, method := range iface.methods {
+		if method.name == name && method.descriptor == descriptor {
+			return method
+		}
+	}
+	for _, iface2 := range iface.interfaces {
+		method := iface2.LookupMethodInInterface(name, descriptor)
+		if method != nil {
+			return method
+		}
+	}
+	return nil
+}
+
+func (its *JavaClass) LookupInterfaceMethod(name, descriptor string) *JavaMethod {
+	for _, method := range its.methods {
+		if method.name == name && method.descriptor == descriptor {
+			return method
+		}
+	}
+	for _, iface2 := range its.interfaces {
+		method := iface2.LookupInterfaceMethod(name, descriptor)
+		if method != nil {
+			return method
+		}
+	}
+	return nil
+}
+
+func (its *JavaClass) InitStarted() bool {
+	return its.initStarted
+}
+func (its *JavaClass) StartInit() {
+	its.initStarted = true
+}
+func (its *JavaClass) SuperClass() *JavaClass {
+	return its.superClass
+}
+
+// c extends self
+func (its *JavaClass) IsSuperClassOf(other *JavaClass) bool {
+	return other.IsSubClassOf(its)
+}
+
+// jvms8 6.5.instanceof
+// jvms8 6.5.checkcast
+func (its *JavaClass) isAssignableFrom(other *JavaClass) bool {
+	s, t := other, its
+
+	if s == t {
+		return true
+	}
+
+	if !t.IsInterface() {
+		return s.IsSubClassOf(t)
+	} else {
+		return s.IsImplements(t)
+	}
+}
+
+// self extends c
+func (its *JavaClass) IsSubClassOf(other *JavaClass) bool {
+	for c := its.superClass; c != nil; c = c.superClass {
+		if c == other {
+			return true
+		}
+	}
+	return false
+}
+
+// self implements iface
+func (its *JavaClass) IsImplements(iface *JavaClass) bool {
+	for c := its; c != nil; c = c.superClass {
+		for _, i := range c.interfaces {
+			if i == iface || i.isSubInterfaceOf(iface) {
+				return true
+			}
+		}
+	}
+	return false
+}
+func (its *JavaClass) GetPackageName() string {
+	if i := strings.LastIndex(its.thisClassName, "/"); i >= 0 {
+		return its.thisClassName[:i]
+	}
+	return ""
 }

@@ -10,13 +10,6 @@ func (its *BytecodeReader) Reset(code []byte, pc int) {
 	its.pc = pc
 }
 
-func (its *BytecodeReader) ResetCode(code []byte) {
-	its.code = code
-}
-func (its *BytecodeReader) ResetPC(pc int) {
-	its.pc = pc
-}
-
 func (its *BytecodeReader) PC() int {
 	return its.pc
 }
@@ -25,6 +18,11 @@ func (its *BytecodeReader) ReadInt8() int8 {
 	return int8(its.ReadOperandCode())
 }
 func (its *BytecodeReader) ReadOperandCode() uint8 {
+	i := its.code[its.pc]
+	its.pc++
+	return i
+}
+func (its *BytecodeReader) ReadUint8() uint8 {
 	i := its.code[its.pc]
 	its.pc++
 	return i
