@@ -36,3 +36,8 @@ javap -l -c -v com.github.taoistwar.java.ClassFileTest
 ```shell
 javap -l -c -v com.github.taoistwar.java.LocalVarDemo
 ```
+
+## 随想
+
+- 表态类型，内存中只存储数据。
+- 动态类型，内存中存储类型和数据。

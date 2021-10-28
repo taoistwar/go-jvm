@@ -20,7 +20,11 @@ func (its *GetStatic) Execute(frame *rtdaBase.JavaFrame) {
 	fieldRef := cp.GetConstant(its.Index).(*java.FieldRef)
 	field := fieldRef.ResolvedField()
 	class := field.Class()
-	// todo: init class
+	if !class.InitStarted() {
+		frame.RevertNextPC()
+		base.InitClass(frame.Thread(), class)
+		return
+	}
 
 	if !field.IsStatic() {
 		panic("java.lang.IncompatibleClassChangeError")

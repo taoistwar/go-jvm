@@ -19,7 +19,7 @@ func (sr *SymRef) ResolvedClass() *JavaClass {
 // jvms8 5.4.3.1
 func (sr *SymRef) resolveClassRef() {
 	d := sr.cp.class
-	c := d.loader.LoadClass(sr.className)
+	c := d.loader.LoadJClass(sr.className)
 	if !c.isAccessibleTo(d) {
 		panic("java.lang.IllegalAccessError")
 	}

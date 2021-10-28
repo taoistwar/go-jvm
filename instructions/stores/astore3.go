@@ -14,6 +14,6 @@ func (its *AStore3) FetchOperand(reader *base.BytecodeReader) {
 
 func (its *AStore3) Execute(frame *rtdaBase.JavaFrame) {
 	value := frame.OperandStack().PopRef()
-	mylog.Printf("Index: 3, Class: %v, Fields: %v, Value: %v", value.Class(), value.Fields(), value)
+	mylog.Printf("Index: 3, Class: %v, Value: %v", value.Class().ThisClassName(), value)
 	frame.LocalVars().SetRef(3, value)
 }

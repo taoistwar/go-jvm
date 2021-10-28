@@ -15,13 +15,9 @@ func (its *BytecodeReader) PC() int {
 }
 
 func (its *BytecodeReader) ReadInt8() int8 {
-	return int8(its.ReadOperandCode())
+	return int8(its.ReadUint8())
 }
-func (its *BytecodeReader) ReadOperandCode() uint8 {
-	i := its.code[its.pc]
-	its.pc++
-	return i
-}
+
 func (its *BytecodeReader) ReadUint8() uint8 {
 	i := its.code[its.pc]
 	its.pc++
@@ -32,16 +28,16 @@ func (its *BytecodeReader) ReadInt16() int16 {
 	return int16(its.ReadUint16())
 }
 func (its *BytecodeReader) ReadUint16() uint16 {
-	byte1 := uint16(its.ReadOperandCode())
-	byte2 := uint16(its.ReadOperandCode())
+	byte1 := uint16(its.ReadUint8())
+	byte2 := uint16(its.ReadUint8())
 	return (byte1 << 8) | byte2
 }
 
 func (its *BytecodeReader) ReadInt32() int32 {
-	byte1 := int32(its.ReadOperandCode())
-	byte2 := int32(its.ReadOperandCode())
-	byte3 := int32(its.ReadOperandCode())
-	byte4 := int32(its.ReadOperandCode())
+	byte1 := int32(its.ReadUint8())
+	byte2 := int32(its.ReadUint8())
+	byte3 := int32(its.ReadUint8())
+	byte4 := int32(its.ReadUint8())
 	return (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4
 }
 
@@ -57,6 +53,6 @@ func (its *BytecodeReader) ReadInt32s(n int32) []int32 {
 // used by lookupswitch and tableswitch
 func (its *BytecodeReader) SkipPadding() {
 	for its.pc%4 != 0 {
-		its.ReadOperandCode()
+		its.ReadUint8()
 	}
 }

@@ -15,23 +15,23 @@ const version = "0.0.1"
 func startJvm(cmd *cli.Cmd) {
 	cp := classpath.ParseClasspath(cmd.XJreOption(), cmd.CpOption())
 	fmt.Printf("classpath:%s class:%s args:%v\n", cp.String(), cmd.Class(), cmd.Args())
-	classLoader := java.NewJavaClassLoader(cp, cmd.VerboseClassFlag())
+	classLoader := java.NewJClassLoader(cp, cmd.VerboseClassFlag())
 	className := strings.Replace(cmd.Class(), ".", "/", -1)
 
-	mainClass := classLoader.LoadClass(className)
+	mainClass := classLoader.LoadJClass(className)
 	if mainClass == nil {
 		panic(fmt.Sprintf("Could not found or load main class %s\n", className))
 	}
-	mainMethod := mainClass.GetMainMethod()
+	mainMethod := mainClass.GetMainJMethod()
 	if mainMethod == nil {
-		panic(fmt.Sprintf("Could not found main method in class %s\n", className))
+		panic(fmt.Sprintf("Could not found main method in class %s\n", cmd.Class()))
 	}
-	interpreter.Interpret(mainMethod, cmd.VerboseInstFlag())
+	interpreter.Interpret(mainMethod, cmd.VerboseInstFlag(), cmd.Args())
 }
 
 func main() {
 	cmd := cli.ParseCmd()
-	class := "com.github.taoistwar.java.InvokeDemo"
+	class := "com.github.taoistwar.java.HelloWorld"
 	cpOption := "demo"
 	cmd.Reset(class, cpOption)
 	if cmd.VersionFlag() {

@@ -25,6 +25,7 @@ func InvokeMethod(invokerFrame *rtdaBase.JavaFrame, method *java.JavaMethod) {
 	if method.IsNative() {
 		if method.Name() == "registerNatives" {
 			thread.PopFrame()
+			fmt.Println("fake invoke native method")
 		} else {
 			panic(fmt.Sprintf("native method: %v.%v%v\n",
 				method.Class().ThisClassName(), method.Name(), method.Descriptor()))

@@ -1,6 +1,8 @@
 package base
 
-import "github.com/taoistwar/go-jvm/rtda/java"
+import (
+	"github.com/taoistwar/go-jvm/rtda/java"
+)
 
 /*
 	一个线程包含一个线程栈，线程栈包含一组栈帧，每次方法调用产生一个栈帧。
@@ -44,4 +46,7 @@ func (thread *JavaThread) NewJavaFrame(javaMethod *java.JavaMethod) *JavaFrame {
 }
 func (thread *JavaThread) IsStackEmpty() bool {
 	return thread.stack.isEmpty()
+}
+func (thread *JavaThread) InitClass(class *java.JavaClass) {
+	// base.InitClass(thread, class)
 }

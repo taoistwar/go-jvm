@@ -20,7 +20,7 @@ type JavaClassLoader struct {
 	verboseFlag bool
 }
 
-func NewJavaClassLoader(cp *classpath.Classpath, verboseFlag bool) *JavaClassLoader {
+func NewJClassLoader(cp *classpath.Classpath, verboseFlag bool) *JavaClassLoader {
 	return &JavaClassLoader{
 		classpath:   cp,
 		classMap:    make(map[string]*JavaClass),
@@ -28,15 +28,38 @@ func NewJavaClassLoader(cp *classpath.Classpath, verboseFlag bool) *JavaClassLoa
 	}
 }
 
-func (its *JavaClassLoader) LoadClass(name string) *JavaClass {
+func (its *JavaClassLoader) LoadJClass(name string) *JavaClass {
 	if class, ok := its.classMap[name]; ok {
 		// already loaded
 		return class
 	}
 
-	return its.loadNonArrayJavaClass(name)
-}
+	var class *JavaClass
+	if name[0] == '[' { // array class
+		class = its.loadArrayClass(name)
+	} else {
+		class = its.loadNonArrayJavaClass(name)
+	}
 
+	if jlClassClass, ok := its.classMap["java/lang/Class"]; ok {
+		class.jClass = jlClassClass.NewObject()
+		class.jClass.extra = class
+	}
+
+	return class
+}
+func (its *JavaClassLoader) loadArrayClass(name string) *JavaClass {
+	class := &JavaClass{
+		accessFlags:   ACC_PUBLIC, // todo
+		thisClassName: name,
+		loader:        its,
+		initStarted:   true,
+	}
+	class.superClass = its.LoadJClass("java/lang/Object")
+	class.interfaces = []*JavaClass{its.LoadJClass("java/lang/Cloneable"), its.LoadJClass("java/io/Serializable")}
+	its.classMap[name] = class
+	return class
+}
 func (its *JavaClassLoader) loadNonArrayJavaClass(name string) *JavaClass {
 	data, entry := its.readClass(name)
 	class := its.defineJavaClass(data)
@@ -50,6 +73,9 @@ func (its *JavaClassLoader) loadNonArrayJavaClass(name string) *JavaClass {
 func (its *JavaClassLoader) readClass(name string) ([]byte, classpath.Entry) {
 	data, entry, err := its.classpath.ReadClass(name)
 	if err != nil {
+		panic("java.lang.JavaClassNotFoundException: " + name)
+	}
+	if data == nil {
 		panic("java.lang.JavaClassNotFoundException: " + name)
 	}
 	return data, entry
@@ -77,7 +103,7 @@ func parseJavaClass(data []byte) *JavaClass {
 // jvms 5.4.3.1
 func resolveSuperClass(class *JavaClass) {
 	if class.thisClassName != "java/lang/Object" {
-		class.superClass = class.loader.LoadClass(class.superClassName)
+		class.superClass = class.loader.LoadJClass(class.superClassName)
 	}
 }
 func resolveInterfaces(class *JavaClass) {
@@ -85,7 +111,7 @@ func resolveInterfaces(class *JavaClass) {
 	if interfaceCount > 0 {
 		class.interfaces = make([]*JavaClass, interfaceCount)
 		for i, interfaceName := range class.interfaceNames {
-			class.interfaces[i] = class.loader.LoadClass(interfaceName)
+			class.interfaces[i] = class.loader.LoadJClass(interfaceName)
 		}
 	}
 }
@@ -167,7 +193,9 @@ func initStaticFinalVar(class *JavaClass, field *JavaField) {
 			val := cp.GetConstant(cpIndex).(float64)
 			vars.SetDouble(slotId, val)
 		case "Ljava/lang/String;":
-			panic("todo")
+			goStr := cp.GetConstant(cpIndex).(string)
+			jStr := JStringObject(class.Loader(), goStr)
+			vars.SetRef(slotId, jStr)
 		}
 	}
 }

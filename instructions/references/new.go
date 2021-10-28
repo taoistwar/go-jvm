@@ -18,11 +18,17 @@ func (its *BytecodeNew) FetchOperand(reader *base.BytecodeReader) {
 func (its *BytecodeNew) Execute(frame *rtdaBase.JavaFrame) {
 	cp := frame.Method().Class().ConstantPool()
 	classRef := cp.GetConstant(its.Index)
+
 	switch classRef := classRef.(type) {
 	case *java.ClassRef:
 		class := classRef.ResolvedClass()
 		if class.IsInterface() || class.IsAbstract() {
 			panic("java.lang.InstantiationError")
+		}
+		if !class.InitStarted() {
+			frame.RevertNextPC()
+			base.InitClass(frame.Thread(), class)
+			return
 		}
 		ref := class.NewObject()
 		frame.OperandStack().PushRef(ref)

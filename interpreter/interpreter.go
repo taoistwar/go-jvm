@@ -9,14 +9,26 @@ import (
 	"github.com/taoistwar/go-jvm/rtda/java"
 )
 
-func Interpret(javaMethod *java.JavaMethod, logInst bool) {
+func Interpret(jMethod *java.JavaMethod, logInst bool, args []string) {
+	jArgs := createArgsArray(jMethod.Class().Loader(), args)
 
 	thread := rtdaBase.NewJavaThread()
-	frame := thread.NewJavaFrame(javaMethod)
+	frame := thread.NewJavaFrame(jMethod)
+	frame.LocalVars().SetRef(0, jArgs)
 	thread.PushFrame(frame)
 
 	defer catchErr(frame)
 	loop(thread, logInst)
+}
+
+func createArgsArray(loader *java.JavaClassLoader, args []string) *java.JavaObject {
+	jStringClass := loader.LoadJClass("java/lang/String")
+	argsArr := jStringClass.ArrayClass().NewJavaArray(uint(len(args)))
+	jArgs := argsArr.Refs()
+	for i, arg := range args {
+		jArgs[i] = java.JStringObject(loader, arg)
+	}
+	return argsArr
 }
 
 func logFrames(thread *rtdaBase.JavaThread) {
@@ -47,7 +59,7 @@ func loop(thread *rtdaBase.JavaThread, logInst bool) {
 
 		// decode
 		reader.Reset(frame.Method().Code(), pc)
-		opcode := reader.ReadOperandCode()
+		opcode := reader.ReadUint8()
 		inst := factory.NewInstruction(opcode)
 		inst.FetchOperand(reader)
 		frame.SetNextPC(reader.PC())

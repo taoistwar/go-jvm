@@ -1,6 +1,7 @@
 package java
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/taoistwar/go-jvm/classfile"
@@ -21,6 +22,7 @@ type JavaClass struct {
 	staticSlotCount   uint
 	staticVars        Slots
 	initStarted       bool
+	jClass            *JavaObject
 }
 
 func NewJavaClass(cf *classfile.ClassFile) *JavaClass {
@@ -34,7 +36,66 @@ func NewJavaClass(cf *classfile.ClassFile) *JavaClass {
 	class.methods = newMethods(class, cf.Methods())
 	return class
 }
+func (its *JavaClass) IsArray() bool {
+	return its.thisClassName[0] == '['
+}
+func (its *JavaClass) NewJavaArray(count uint) *JavaObject {
+	if !its.IsArray() {
+		panic(fmt.Sprintf("Not array class: %v", its.thisClassName))
+	}
+	switch its.thisClassName {
+	case "[Z": // boolean
+		return &JavaObject{class: its, data: make([]int8, count)}
+	case "[B": // byte
+		return &JavaObject{class: its, data: make([]int8, count)}
+	case "[C": // chart
+		return &JavaObject{class: its, data: make([]uint16, count)}
+	case "[S": // short
+		return &JavaObject{class: its, data: make([]int16, count)}
+	case "[I": // int
+		return &JavaObject{class: its, data: make([]int32, count)}
+	case "[J": // long
+		return &JavaObject{class: its, data: make([]int64, count)}
+	case "[F": // float
+		return &JavaObject{class: its, data: make([]float32, count)}
+	case "[D": // double
+		return &JavaObject{class: its, data: make([]float64, count)}
+	default:
+		return &JavaObject{class: its, data: make([]*JavaObject, count)}
+	}
+}
 
+var primitiveTypes = map[string]string{
+	"void":    "V",
+	"boolean": "Z",
+	"byte":    "B",
+	"short":   "S",
+	"int":     "I",
+	"long":    "J",
+	"char":    "C",
+	"float":   "F",
+	"double":  "D",
+}
+
+func toDescriptor(className string) string {
+	if className[0] == '[' {
+		// array
+		return className
+	}
+	if d, ok := primitiveTypes[className]; ok {
+		// primitive
+		return d
+	}
+	// object
+	return "L" + className + ";"
+}
+func getArrayClassName(className string) string {
+	return "[" + toDescriptor(className)
+}
+func (its *JavaClass) ArrayClass() *JavaClass {
+	arrayClassName := getArrayClassName(its.thisClassName)
+	return its.loader.LoadJClass(arrayClassName)
+}
 func (its *JavaClass) ThisClassName() string {
 	return its.thisClassName
 }
@@ -84,7 +145,7 @@ func (its *JavaClass) getPackageName() string {
 	return ""
 }
 
-func (its *JavaClass) GetMainMethod() *JavaMethod {
+func (its *JavaClass) GetMainJMethod() *JavaMethod {
 	return its.getStaticMethod("main", "([Ljava/lang/String;)V")
 }
 func (its *JavaClass) GetClassInitMethod() *JavaMethod {
@@ -209,7 +270,9 @@ func (its *JavaClass) LookupInterfaceMethod(name, descriptor string) *JavaMethod
 	}
 	return nil
 }
-
+func (its *JavaClass) InitializationNotStarted() bool {
+	return !its.initStarted
+}
 func (its *JavaClass) InitStarted() bool {
 	return its.initStarted
 }
@@ -219,29 +282,77 @@ func (its *JavaClass) StartInit() {
 func (its *JavaClass) SuperClass() *JavaClass {
 	return its.superClass
 }
+func (its *JavaClass) Interfaces() []*JavaClass {
+	return its.interfaces
+}
+func (its *JavaClass) Methods() []*JavaMethod {
+	return its.methods
+}
+func (its *JavaClass) Fields() []*JavaField {
+	return its.fields
+}
+func (its *JavaClass) Loader() *JavaClassLoader {
+	return its.loader
+}
 
-// c extends self
+// c extends its
 func (its *JavaClass) IsSuperClassOf(other *JavaClass) bool {
 	return other.IsSubClassOf(its)
 }
 
 // jvms8 6.5.instanceof
 // jvms8 6.5.checkcast
-func (its *JavaClass) isAssignableFrom(other *JavaClass) bool {
+/*
+other是否为its的子类
+@param other
+*/
+func (its *JavaClass) IsAssignableFrom(other *JavaClass) bool {
 	s, t := other, its
 
 	if s == t {
 		return true
 	}
 
-	if !t.IsInterface() {
-		return s.IsSubClassOf(t)
+	if !s.IsArray() {
+		if !s.IsInterface() {
+			// s is class
+			if !t.IsInterface() {
+				// t is not interface
+				return s.IsSubClassOf(t)
+			} else {
+				// t is interface
+				return s.IsImplements(t)
+			}
+		} else {
+			// s is interface
+			if !t.IsInterface() {
+				// t is not interface
+				return t.isJlObject()
+			} else {
+				// t is interface
+				return t.isSuperInterfaceOf(s)
+			}
+		}
 	} else {
-		return s.IsImplements(t)
+		// s is array
+		if !t.IsArray() {
+			if !t.IsInterface() {
+				// t is class
+				return t.isJlObject()
+			} else {
+				// t is interface
+				return t.isJlCloneable() || t.isJioSerializable()
+			}
+		} else {
+			// t is array
+			sc := s.ComponentClass()
+			tc := t.ComponentClass()
+			return sc == tc || tc.IsAssignableFrom(sc)
+		}
 	}
 }
 
-// self extends c
+// its extends c
 func (its *JavaClass) IsSubClassOf(other *JavaClass) bool {
 	for c := its.superClass; c != nil; c = c.superClass {
 		if c == other {
@@ -251,7 +362,7 @@ func (its *JavaClass) IsSubClassOf(other *JavaClass) bool {
 	return false
 }
 
-// self implements iface
+// its implements iface
 func (its *JavaClass) IsImplements(iface *JavaClass) bool {
 	for c := its; c != nil; c = c.superClass {
 		for _, i := range c.interfaces {
@@ -267,4 +378,72 @@ func (its *JavaClass) GetPackageName() string {
 		return its.thisClassName[:i]
 	}
 	return ""
+}
+func getComponentClassName(className string) string {
+	if className[0] == '[' {
+		componentTypeDescriptor := className[1:]
+		return toClassName(componentTypeDescriptor)
+	}
+	panic("Not array: " + className)
+}
+func toClassName(descriptor string) string {
+	if descriptor[0] == '[' {
+		// array
+		return descriptor
+	}
+	if descriptor[0] == 'L' {
+		// object
+		return descriptor[1 : len(descriptor)-1]
+	}
+	for className, d := range primitiveTypes {
+		if d == descriptor {
+			// primitive
+			return className
+		}
+	}
+	panic("Invalid descriptor: " + descriptor)
+}
+func (its *JavaClass) ComponentClass() *JavaClass {
+	componentClassName := getComponentClassName(its.thisClassName)
+	return its.loader.LoadJClass(componentClassName)
+}
+
+func (its *JavaClass) getField(name, descriptor string, isStatic bool) *JavaField {
+	for c := its; c != nil; c = c.superClass {
+		for _, field := range c.fields {
+			if field.IsStatic() == isStatic &&
+				field.name == name &&
+				field.descriptor == descriptor {
+
+				return field
+			}
+		}
+	}
+	return nil
+}
+
+func (its *JavaClass) isJlObject() bool {
+	return its.thisClassName == "java/lang/Object"
+}
+func (its *JavaClass) isJlCloneable() bool {
+	return its.thisClassName == "java/lang/Cloneable"
+}
+func (its *JavaClass) isJioSerializable() bool {
+	return its.thisClassName == "java/io/Serializable"
+}
+func (its *JavaClass) JClass() *JavaObject {
+	return its.jClass
+}
+
+// iface extends self
+func (its *JavaClass) isSuperInterfaceOf(iface *JavaClass) bool {
+	return iface.isSubInterfaceOf(its)
+}
+func (its *JavaClass) GetRefVar(fieldName, fieldDescriptor string) *JavaObject {
+	field := its.getField(fieldName, fieldDescriptor, true)
+	return its.staticVars.GetRef(field.slotId)
+}
+func (its *JavaClass) SetRefVar(fieldName, fieldDescriptor string, ref *JavaObject) {
+	field := its.getField(fieldName, fieldDescriptor, true)
+	its.staticVars.SetRef(field.slotId, ref)
 }

@@ -13,7 +13,7 @@ func InitClass(thread *rtdaBase.JavaThread, class *java.JavaClass) {
 }
 
 func scheduleClinit(thread *rtdaBase.JavaThread, class *java.JavaClass) {
-	init := class.GetClassInitMethod()
+	init := class.GetClassInitMethod() // <clinit>
 	if init != nil {
 		// exec <clinit>
 		newFrame := thread.NewJavaFrame(init)
